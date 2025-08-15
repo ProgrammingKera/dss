@@ -123,6 +123,14 @@ window.onload = function() {
         addExpiryProductsToCart(products);
         sessionStorage.removeItem('expiryProductsToAdd');
     }
+    
+    // Check if there are predicted products to add from sessionStorage
+    const predictedProducts = sessionStorage.getItem('predictedProductsToAdd');
+    if (predictedProducts) {
+        const products = JSON.parse(predictedProducts);
+        addPredictedProductsToCart(products);
+        sessionStorage.removeItem('predictedProductsToAdd');
+    }
 };
 
 // Function to add expiry products to cart automatically
@@ -150,5 +158,33 @@ function addExpiryProductsToCart(products) {
     // Show notification
     if (addedCount > 0) {
         alert(`${addedCount} expiry products have been automatically added to your cart!`);
+    }
+}
+
+// Function to add predicted products to cart automatically
+function addPredictedProductsToCart(products) {
+    if (!products || products.length === 0) return;
+    
+    let addedCount = 0;
+    products.forEach(product => {
+        // Add each product to cart with recommended quantity
+        const existing = cart.find(item => item.name === product.product_name);
+        if (existing) {
+            existing.quantity += product.recommended_quantity;
+        } else {
+            cart.push({ 
+                name: product.product_name, 
+                price: product.estimated_price || 50, // Default price if not available
+                quantity: product.recommended_quantity 
+            });
+            addedCount++;
+        }
+    });
+    
+    updateCartDisplay();
+    
+    // Show notification
+    if (addedCount > 0) {
+        alert(`${addedCount} predicted restock products have been automatically added to your cart!`);
     }
 }

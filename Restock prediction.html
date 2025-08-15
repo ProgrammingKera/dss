@@ -36,11 +36,115 @@
     <!-- Main Content -->
     <main>
         <h1 style="text-align: center; margin-bottom: 20px;">Restocking Prediction</h1>
+        
+        <!-- Action Buttons -->
+        <div style="text-align: center; margin-bottom: 30px;">
+            <button id="generateRestockBtn" class="restock-btn" onclick="generateRestockPredictions()">
+                <i class="fas fa-robot"></i> Generate Restock Predictions
+            </button>
+            <button id="downloadRestockBtn" class="download-btn" onclick="downloadRestockReport()" style="display: none;">
+                <i class="fas fa-download"></i> Download Report
+            </button>
+        </div>
+        
+        <!-- Restock Products Table -->
+        <div id="restockTableContainer" style="display: none; margin-bottom: 30px;">
+            <div class="card" style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h3 style="color: var(--primary-color); margin-bottom: 20px;">
+                    <i class="fas fa-truck"></i> Products Requiring Restock
+                </h3>
+                <div style="overflow-x: auto;">
+                    <table id="restockTable" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background-color: #f8f9fa;">
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Product Name</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Current Stock</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Predicted Restock Date</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Recommended Quantity</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Days Until Restock</th>
+                                <th style="padding: 12px; border: 1px solid #ddd; text-align: left;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="restockTableBody">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
         <iframe title="predict_restocks" width="1024" height="612" src="https://app.fabric.microsoft.com/view?r=eyJrIjoiYzI4NzZiNjQtNDM0ZC00NTcwLWE3MGYtNjE1NDAyYjIxODNhIiwidCI6IjE3OTZiZTkwLWJhNTktNDJjOC05ZmQ0LWM4MTFlMjI5MTdmMyIsImMiOjl9" frameborder="0" allowFullScreen="true">
 
         </iframe>
         
     </main>
+    
+    <!-- Loading Modal -->
+    <div id="loadingModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 30px; border-radius: 10px; text-align: center;">
+            <div style="margin-bottom: 20px;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
+            </div>
+            <h3>Generating Restock Predictions...</h3>
+            <p>Please wait while we analyze your inventory data</p>
+        </div>
+    </div>
+    
+    <style>
+        .restock-btn, .download-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .restock-btn:hover, .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(19, 139, 168, 0.3);
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #27AE60, #2ECC71);
+        }
+        
+        .status-urgent {
+            background: #ff4757;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-warning {
+            background: #ffa502;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-normal {
+            background: #2ed573;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+    </style>
+    
+    <script src="/js/restockprediction.js"></script>
 </body>
 
 </html>

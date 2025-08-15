@@ -105,3 +105,34 @@ async function addExpiryProductsToOrder() {
         alert('Error processing request. Please try again.');
     }
 }
+
+// Add predicted products to order function
+async function addPredictedProductsToOrder() {
+    try {
+        const response = await fetch('/api/predicted_products_for_order');
+        const predictedProducts = await response.json();
+        
+        if (predictedProducts.error) {
+            alert('Error fetching predicted products: ' + predictedProducts.error);
+            return;
+        }
+        
+        if (predictedProducts.length === 0) {
+            alert('No predicted restock products found.');
+            return;
+        }
+        
+        // Store in sessionStorage and redirect to order page
+        sessionStorage.setItem('predictedProductsToAdd', JSON.stringify(predictedProducts));
+        
+        // Show confirmation and redirect
+        const confirmMsg = `Found ${predictedProducts.length} products predicted for restock.\nRedirect to order page to add them to cart?`;
+        if (confirm(confirmMsg)) {
+            window.location.href = '/order';
+        }
+        
+    } catch (error) {
+        console.error('Error adding predicted products to order:', error);
+        alert('Error processing request. Please try again.');
+    }
+}

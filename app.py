@@ -12,6 +12,7 @@ from fpdf import FPDF
 import os
 import stripe
 import uuid
+from datetime import date
 
 # Import DSS module
 from dss import init_dss_routes
@@ -1241,6 +1242,223 @@ def download_restock_pdf(filename):
         return send_from_directory('restock_orders', filename, as_attachment=True)
     except Exception as e:
         return jsonify({"error": str(e)}), 404
+
+
+# API to save auto generated order
+@app.route('/api/save_auto_order', methods=['POST'])
+def save_auto_order():
+    try:
+        data = request.json
+        total_items = data.get('total_items', 0)
+        estimated_cost = data.get('estimated_cost', 0)
+        
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            INSERT INTO auto_generated_order_list 
+            (generation_date, processed_status, total_items, estimated_cost)
+            VALUES (NOW(), 'pending', %s, %s)
+        """, (total_items, estimated_cost))
+        
+        auto_order_id = cur.lastrowid
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({
+            "success": True,
+            "auto_order_id": auto_order_id
+        })
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# API to save auto order items
+@app.route('/api/save_auto_order_item', methods=['POST'])
+def save_auto_order_item():
+    try:
+        data = request.json
+        auto_order_id = data.get('auto_order_id')
+        product_id = data.get('product_id')
+        quantity_to_order = data.get('quantity_to_order')
+        
+        cur = mysql.connection.cursor()
+        
+        # Get the latest prediction_id for this product
+        cur.execute("""
+            SELECT prediction_id FROM restock_prediction 
+            WHERE product_id = %s 
+            ORDER BY prediction_date DESC 
+            LIMIT 1
+        """, (product_id,))
+        
+        prediction_result = cur.fetchone()
+        prediction_id = prediction_result[0] if prediction_result else None
+        
+        cur.execute("""
+            INSERT INTO auto_order_items 
+            (auto_order_id, product_id, prediction_id, quantity_to_order, status)
+            VALUES (%s, %s, %s, %s, 'pending')
+        """, (auto_order_id, product_id, prediction_id, quantity_to_order))
+        
+        mysql.connection.commit()
+        cur.close()
+        
+        return jsonify({"success": True})
+        
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+# API to download restock report
+@app.route('/api/download_restock_report/<int:auto_order_id>')
+def download_restock_report(auto_order_id):
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get order details
+        cur.execute("""
+            SELECT * FROM auto_generated_order_list 
+            WHERE auto_order_id = %s
+        """, (auto_order_id,))
+        order = cur.fetchone()
+        
+        if not order:
+            return jsonify({"error": "Order not found"}), 404
+        
+        # Get order items with product details
+        cur.execute("""
+            SELECT aoi.*, p.product_name, p.price, rp.predicted_restock_date
+            FROM auto_order_items aoi
+            JOIN products p ON aoi.product_id = p.product_id
+            LEFT JOIN restock_prediction rp ON aoi.prediction_id = rp.prediction_id
+            WHERE aoi.auto_order_id = %s
+        """, (auto_order_id,))
+        items = cur.fetchall()
+        cur.close()
+        
+        # Generate PDF
+        pdf_path = generate_restock_report_pdf(order, items)
+        
+        return send_from_directory('restock_reports', os.path.basename(pdf_path), as_attachment=True)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+def generate_restock_report_pdf(order, items):
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+    
+    # Header
+    pdf.set_font("Arial", "B", 20)
+    pdf.set_text_color(19, 139, 168)
+    pdf.cell(0, 10, "Dogar Pharmacy", ln=True, align="C")
+    
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("Arial", "B", 14)
+    pdf.ln(5)
+    pdf.cell(0, 10, f"Restock Prediction Report", ln=True, align="C")
+    pdf.cell(0, 10, f"Auto Order ID: {order[0]}", ln=True)
+    
+    pdf.set_font("Arial", "", 12)
+    pdf.cell(0, 10, f"Generated Date: {order[1].strftime('%d %B %Y')}", ln=True)
+    pdf.cell(0, 10, f"Total Items: {order[4]}", ln=True)
+    pdf.cell(0, 10, f"Estimated Cost: Rs. {order[5]:.2f}", ln=True)
+    pdf.ln(10)
+    
+    # Table Headers
+    pdf.set_font("Arial", "B", 10)
+    pdf.set_fill_color(240, 248, 255)
+    pdf.cell(60, 8, "Product Name", 1, 0, "C", True)
+    pdf.cell(30, 8, "Quantity", 1, 0, "C", True)
+    pdf.cell(30, 8, "Est. Price", 1, 0, "C", True)
+    pdf.cell(35, 8, "Restock Date", 1, 0, "C", True)
+    pdf.cell(25, 8, "Status", 1, 1, "C", True)
+    
+    # Table Data
+    pdf.set_font("Arial", "", 9)
+    total_cost = 0
+    
+    for item in items:
+        product_name = item[4][:25] + "..." if len(item[4]) > 25 else item[4]  # Truncate long names
+        quantity = item[5]
+        est_price = item[6] if len(item) > 6 and item[6] else 50  # Default price
+        restock_date = item[7].strftime('%d/%m/%Y') if len(item) > 7 and item[7] else 'N/A'
+        status = item[6] if len(item) > 6 else 'Pending'
+        
+        item_total = quantity * est_price
+        total_cost += item_total
+        
+        pdf.cell(60, 7, product_name, 1)
+        pdf.cell(30, 7, str(quantity), 1, 0, "C")
+        pdf.cell(30, 7, f"Rs. {est_price}", 1, 0, "C")
+        pdf.cell(35, 7, restock_date, 1, 0, "C")
+        pdf.cell(25, 7, status, 1, 1, "C")
+    
+    # Total
+    pdf.ln(5)
+    pdf.set_font("Arial", "B", 12)
+    pdf.cell(120, 10, "Total Estimated Cost", 1)
+    pdf.cell(60, 10, f"Rs. {total_cost:.2f}", 1, 1, "C")
+    
+    # Footer
+    pdf.ln(10)
+    pdf.set_font("Arial", "", 10)
+    pdf.cell(0, 8, "This is an auto-generated restock prediction report.", ln=True, align="C")
+    pdf.cell(0, 8, f"Generated on: {date.today().strftime('%d %B %Y')}", ln=True, align="C")
+    
+    # Save PDF
+    pdf_folder = "restock_reports"
+    os.makedirs(pdf_folder, exist_ok=True)
+    filename = f"restock_report_{order[0]}.pdf"
+    path = os.path.join(pdf_folder, filename)
+    pdf.output(path)
+    
+    return path
+
+
+# API to get predicted products for order page
+@app.route('/api/predicted_products_for_order', methods=['GET'])
+def get_predicted_products_for_order():
+    try:
+        cur = mysql.connection.cursor()
+        
+        # Get latest restock predictions that need urgent attention (within 30 days)
+        cur.execute("""
+            SELECT DISTINCT p.product_id, p.product_name, p.price, 
+                   rp.recommended_quantity, rp.predicted_restock_date,
+                   DATEDIFF(rp.predicted_restock_date, CURDATE()) as days_until_restock
+            FROM restock_prediction rp
+            JOIN products p ON rp.product_id = p.product_id
+            WHERE rp.prediction_date = (
+                SELECT MAX(prediction_date) 
+                FROM restock_prediction rp2 
+                WHERE rp2.product_id = rp.product_id
+            )
+            AND DATEDIFF(rp.predicted_restock_date, CURDATE()) <= 30
+            AND DATEDIFF(rp.predicted_restock_date, CURDATE()) >= 0
+            ORDER BY days_until_restock ASC
+        """)
+        
+        rows = cur.fetchall()
+        cur.close()
+        
+        predicted_products = []
+        for row in rows:
+            predicted_products.append({
+                'product_id': row[0],
+                'product_name': row[1],
+                'estimated_price': float(row[2]) if row[2] else 50.0,
+                'recommended_quantity': row[3],
+                'predicted_restock_date': row[4].strftime('%Y-%m-%d') if row[4] else None,
+                'days_until_restock': row[5]
+            })
+        
+        return jsonify(predicted_products)
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":
