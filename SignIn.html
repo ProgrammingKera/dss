@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign-In Page</title>
+    <link rel="shortcut icon" href="/pictures/icon.png" type="image/x-icon">
+
+    
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f5f7fa;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            background: url('/pictures/SignIn.png') no-repeat center center / cover;
+            position: relative;
+        }
+
+        /* ✅ Message Box */
+        #message-box {
+            display: none;
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 5px;
+            font-size: 14px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+        }
+
+        .form-section {
+            width: 350px;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            margin-right: 60px;
+            text-align: center;
+        }
+
+        /* ✅ Logo */
+        .logo {
+            margin-bottom: 15px;
+        }
+
+        .logo img {
+            width: 80px;
+            height: 80px;
+        }
+
+        h3 {
+            font-size: 18px;
+            color: #777;
+            margin-bottom: 5px;
+        }
+
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        form label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #555;
+            text-align: left;
+        }
+
+        form input {
+            width: 100%;
+            padding: 10px 12px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        form input:focus {
+            border-color: #0cb8b2;
+        }
+
+        .forgot-password {
+            font-size: 12px;
+            color: #0cb8b2;
+            font-weight: bold;
+            text-decoration: none;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .sign-in-button {
+            width: 100%;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: #fff;
+            background-color: #0cb8b2;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+
+        .sign-in-button:hover {
+            background-color: #108581;
+        }
+
+        .signup-text {
+            margin-top: 15px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        .signup-text a {
+            color: #0cb8b2;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .signup-text a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .form-section {
+                width: 90%;
+                margin-left: 10px;
+            }
+
+            h1 {
+                font-size: 20px;
+            }
+
+            form input {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .sign-in-button {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .signup-text {
+                font-size: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+
+        <!-- ✅ Message Box -->
+        <div id="message-box"></div>
+
+        <div class="form-section">
+            <!-- ✅ Logo -->
+            <div class="logo">
+                <img src="/pictures/icon.png" alt="Logo">
+            </div>
+
+            <h3>Welcome back !!!</h3>
+            <h1>Sign in</h1>
+            <form id="login-form">
+                <label for="email">Email</label>
+                <input type="email" id="email" placeholder="Enter Your Email" required />
+
+                <label for="password">Password</label>
+                <input type="password" id="password" placeholder="Enter Your Password" required />
+
+                <a href="/forgot_password" class="forgot-password">Forgot Password?</a>
+
+                <button type="submit" class="sign-in-button">Sign In</button>
+            </form>
+
+            <script>
+                function showMessage(message, type) {
+                    const box = document.getElementById("message-box");
+                    box.innerText = message;
+                    box.style.background = type === "success" ? "#4CAF50" : "#f44336";
+                    box.style.display = "block";
+
+                    setTimeout(() => {
+                        box.style.display = "none";
+                    }, 3000);
+                }
+
+                document.getElementById("login-form").addEventListener("submit", function (event) {
+                    event.preventDefault();
+
+                    let email = document.getElementById("email").value.trim();
+                    let password = document.getElementById("password").value.trim();
+
+                    fetch("http://127.0.0.1:5000/signsin", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        credentials: "include",
+                        body: JSON.stringify({ email, password })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showMessage("✅ Login Successful!", "success");
+                                setTimeout(() => {
+                                    const role = data.role;
+                                    if (role === "admin") {
+                                        window.location.href = "/admininventory";
+                                    } else if (role === "employee") {
+                                        window.location.href = "/pos";
+                                    } else if (role === "owner") {
+                                        window.location.href = "/dashboard";
+                                    } else if (role === "customer") {
+                                        window.location.href = "/customer";
+                                    } else {
+                                        showMessage("Unknown role!", "error");
+                                    }
+                                }, 1200);
+                            } else {
+                                showMessage("❌ " + data.message, "error");
+                            }
+                        })
+                        .catch(error => {
+                            console.error("Error:", error);
+                            showMessage("Login failed. Try again later.", "error");
+                        });
+                });
+            </script>
+
+            <p class="signup-text">
+                I don’t have an account? <a href="/signup">Sign up</a>
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

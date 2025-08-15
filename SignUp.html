@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up</title>
+  <link rel="shortcut icon" href="/pictures/icon.png" type="image/x-icon">
+
+  <!-- ✅ Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url("/pictures/SignUp.png") no-repeat center center / cover;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 350px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+      position: relative;
+    }
+
+    /* ✅ Message Box */
+    #message-box {
+      display: none;
+      position: absolute;
+      top: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 12px 20px;
+      border-radius: 5px;
+      font-size: 14px;
+      color: white;
+      font-weight: bold;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    h1 {
+      font-size: 28px;
+      color: #000;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    .form-group {
+      margin-bottom: 10px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-size: 12px;
+      color: #555;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      font-size: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: #0cb8b2;
+      box-shadow: 0 0 5px rgba(12, 184, 178, 0.5);
+    }
+
+    .form-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .form-row .form-group {
+      flex: 1;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 8px;
+      font-size: 14px;
+      background: #0cb8b2;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .btn:hover {
+      background: #108581;
+    }
+
+    .footer-text {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #777;
+      text-align: center;
+    }
+
+    .footer-text a {
+      color: #0cb8b2;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .footer-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- ✅ Message Box -->
+    <div id="message-box"></div>
+
+    <p>Create your account</p>
+    <h1>Sign up</h1>
+    <form id="signupForm">
+      <div class="form-group">
+        <select name="role" id="role" required>
+          <option value="" disabled selected>Select a Role</option>
+          <option value="owner">Owner</option>
+          <option value="admin">Admin</option>
+          <option value="employee">Employee</option>
+          <option value="customer">Customer</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter Username" required />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="first-name">First Name</label>
+          <input type="text" id="first-name" placeholder="Enter First Name" required />
+        </div>
+        <div class="form-group">
+          <label for="last-name">Last Name</label>
+          <input type="text" id="last-name" placeholder="Enter Last Name" required />
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="Enter Your Email" required />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter Your Password" required />
+      </div>
+      <div class="form-group">
+        <label for="confirm-password">Confirm Password</label>
+        <input type="password" id="confirm-password" placeholder="Confirm Your Password" required />
+      </div>
+      <button type="submit" class="btn">Sign Up →</button>
+    </form>
+
+    <p class="footer-text">
+      Already have an account? <a href="/signin">Sign In</a>
+    </p>
+  </div>
+
+  <script>
+    function showMessage(message, type) {
+      const box = document.getElementById("message-box");
+      box.innerText = message;
+      box.style.background = type === "success" ? "#4CAF50" : "#f44336";
+      box.style.display = "block";
+
+      setTimeout(() => {
+        box.style.display = "none";
+      }, 3000);
+    }
+
+    document.getElementById("signupForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+
+      let formData = {
+        username: document.getElementById("username").value,
+        firstName: document.getElementById("first-name").value,
+        lastName: document.getElementById("last-name").value,
+        email: document.getElementById("email").value,
+        password: document.getElementById("password").value,
+        role: document.getElementById("role").value
+      };
+
+      fetch("http://127.0.0.1:5000/signsup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      })
+        .then(response => response.text())
+        .then(data => {
+          if (data.toLowerCase().includes("success")) {
+            showMessage("✅ Signup Successful!", "success");
+            setTimeout(() => {
+              window.location.href = "/signin";
+            }, 1500);
+          } else {
+            showMessage("❌ " + data, "error");
+          }
+        })
+        .catch(error => {
+          console.error("Error:", error);
+          showMessage("Signup failed. Please try again.", "error");
+        });
+    });
+  </script>
+</body>
+
+</html>
