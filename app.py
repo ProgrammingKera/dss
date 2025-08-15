@@ -1235,5 +1235,13 @@ def delete_employee(emp_id):
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/download_restock_pdf/<filename>')
+def download_restock_pdf(filename):
+    try:
+        return send_from_directory('restock_orders', filename, as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 404
+
+
 if __name__ == "__main__":
     app.run(port=5000, debug=True)

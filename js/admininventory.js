@@ -74,3 +74,34 @@ function showProductDetails(product) {
 document.addEventListener('DOMContentLoaded', () => {
     fetchInventory();
 });
+
+// Add expiry products to order function
+async function addExpiryProductsToOrder() {
+    try {
+        const response = await fetch('/api/expiry_products_week');
+        const expiryProducts = await response.json();
+        
+        if (expiryProducts.error) {
+            alert('Error fetching expiry products: ' + expiryProducts.error);
+            return;
+        }
+        
+        if (expiryProducts.length === 0) {
+            alert('No products expiring within a week found.');
+            return;
+        }
+        
+        // Store in sessionStorage and redirect to order page
+        sessionStorage.setItem('expiryProductsToAdd', JSON.stringify(expiryProducts));
+        
+        // Show confirmation and redirect
+        const confirmMsg = `Found ${expiryProducts.length} products expiring within a week.\nRedirect to order page to add them to cart?`;
+        if (confirm(confirmMsg)) {
+            window.location.href = '/order';
+        }
+        
+    } catch (error) {
+        console.error('Error adding expiry products to order:', error);
+        alert('Error processing request. Please try again.');
+    }
+}

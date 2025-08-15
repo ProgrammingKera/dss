@@ -169,6 +169,8 @@ def seasonal_demand():
 def restocking(): 
     return render_template('Restock Prediction.html')
 
+
+
 @routes.route('/smart-recommendation')
 def smart_recommendation(): 
     return render_template('SmartRecommendation.html')

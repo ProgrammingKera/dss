@@ -113,4 +113,42 @@ document.getElementById("confirm-order").addEventListener("click", async () => {
 
 
 // Load products on page load
-window.onload = fetchProducts;
+window.onload = function() {
+    fetchProducts();
+    
+    // Check if there are expiry products to add from sessionStorage
+    const expiryProducts = sessionStorage.getItem('expiryProductsToAdd');
+    if (expiryProducts) {
+        const products = JSON.parse(expiryProducts);
+        addExpiryProductsToCart(products);
+        sessionStorage.removeItem('expiryProductsToAdd');
+    }
+};
+
+// Function to add expiry products to cart automatically
+function addExpiryProductsToCart(products) {
+    if (!products || products.length === 0) return;
+    
+    let addedCount = 0;
+    products.forEach(product => {
+        // Add each product to cart with quantity 1
+        const existing = cart.find(item => item.name === product.product_name);
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({ 
+                name: product.product_name, 
+                price: product.price, 
+                quantity: 1 
+            });
+            addedCount++;
+        }
+    });
+    
+    updateCartDisplay();
+    
+    // Show notification
+    if (addedCount > 0) {
+        alert(`${addedCount} expiry products have been automatically added to your cart!`);
+    }
+}
